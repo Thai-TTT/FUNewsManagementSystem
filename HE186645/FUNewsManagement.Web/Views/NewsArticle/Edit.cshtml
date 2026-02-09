@@ -1,0 +1,223 @@
+﻿@model NewsArticleViewModel
+@{
+    ViewData["Title"] = "Edit News Article";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #f8f9fa;
+    }
+
+    .edit-container {
+        padding: 60px 0 80px;
+    }
+
+    .edit-card {
+        border: none;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        background: white;
+        color: #2c3e50;
+    }
+
+    .card-header {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-bottom: none;
+    }
+
+        .card-header h4 {
+            font-weight: 700;
+            margin: 0;
+        }
+
+    .form-label {
+        font-weight: 600;
+        color: #34495e;
+    }
+
+    .form-control, .form-select, textarea.form-control {
+        border: 1px solid #ced4da;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s;
+    }
+
+        .form-control:focus, .form-select:focus, textarea.form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+            outline: none;
+        }
+
+    textarea {
+        resize: vertical;
+        min-height: 220px;
+    }
+
+    .tags-container {
+        max-height: 280px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+        padding: 1rem;
+    }
+
+    .form-check-input {
+        margin-top: 0.4rem;
+    }
+
+    .form-check-label {
+        color: #495057;
+    }
+
+    .btn-update {
+        background: linear-gradient(90deg, #f39c12, #e67e22);
+        border: none;
+        color: white;
+        transition: all 0.3s;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+    }
+
+        .btn-update:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.4);
+        }
+
+    .btn-cancel {
+        background: linear-gradient(90deg, #6c757d, #5a6268);
+        border: none;
+        color: white;
+        transition: all 0.3s;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+    }
+
+        .btn-cancel:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+        }
+
+    .page-title {
+        color: white;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="edit-container">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-11">
+            <div class="text-center mb-5">
+                <h2 class="page-title display-5 fw-bold">
+                    <i class="fas fa-edit me-3"></i>Chỉnh sửa Bài viết
+                </h2>
+                <hr class="w-25 mx-auto border-light opacity-75" />
+            </div>
+
+            <div class="edit-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin bài viết</h4>
+                </div>
+
+                <div class="card-body p-5">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
+                        <input type="hidden" asp-for="NewsArticleID" />
+
+                        <div class="row g-4">
+                            <!-- Cột trái: Nội dung chính -->
+                            <div class="col-lg-8">
+                                <div class="mb-4">
+                                    <label asp-for="NewsTitle" class="form-label">Tiêu đề bài viết *</label>
+                                    <input asp-for="NewsTitle" class="form-control form-control-lg" />
+                                    <span asp-validation-for="NewsTitle" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label asp-for="Headline" class="form-label">Headline (Tóm tắt) *</label>
+                                    <input asp-for="Headline" class="form-control form-control-lg" />
+                                    <span asp-validation-for="Headline" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label asp-for="NewsContent" class="form-label">Nội dung bài viết *</label>
+                                    <textarea asp-for="NewsContent" class="form-control" rows="12"></textarea>
+                                    <span asp-validation-for="NewsContent" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label asp-for="NewsSource" class="form-label">Nguồn (nếu có)</label>
+                                    <input asp-for="NewsSource" class="form-control" placeholder="https://..." />
+                                    <span asp-validation-for="NewsSource" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Cột phải: Category, Status, Tags -->
+                            <div class="col-lg-4">
+                                <div class="mb-4">
+                                    <label asp-for="CategoryID" class="form-label">Danh mục *</label>
+                                    <select asp-for="CategoryID" class="form-select form-select-lg">
+                                        <option value="">Chọn danh mục</option>
+                                        @foreach (var category in Model.AvailableCategories)
+                                        {
+                                            <option value="@category.CategoryID"
+                                                    selected="@(category.CategoryID == Model.CategoryID ? "selected" : null)">
+                                                @category.CategoryName
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="CategoryID" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-4 form-check form-switch">
+                                    <input asp-for="NewsStatus" class="form-check-input" style="width: 3rem; height: 1.6rem;" />
+                                    <label asp-for="NewsStatus" class="form-check-label fs-5">Bài viết đang hoạt động</label>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">Thẻ (Tags)</label>
+                                    <div class="tags-container">
+                                        @foreach (var tag in Model.AvailableTags)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="SelectedTagIds" value="@tag.TagID"
+                                                       id="tag_@tag.TagID"
+                                                       checked="@(Model.SelectedTagIds?.Contains(tag.TagID) == true)" />
+                                                <label class="form-check-label" for="tag_@tag.TagID">
+                                                    @tag.TagName
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex gap-3 justify-content-end">
+                            <button type="submit" class="btn btn-lg btn-update">
+                                <i class="fas fa-save me-2"></i>Cập nhật bài viết
+                            </button>
+                            <a asp-action="Index" class="btn btn-lg btn-cancel">
+                                <i class="fas fa-times me-2"></i>Hủy bỏ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

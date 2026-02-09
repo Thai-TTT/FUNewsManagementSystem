@@ -1,0 +1,216 @@
+﻿@model IEnumerable<TagViewModel>
+
+@{
+    ViewData["Title"] = "Tag Management";
+}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2><i class="fas fa-tags"></i> Tag Management</h2>
+        <hr />
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <form method="get" asp-action="Index" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="searchTerm" class="form-control"
+                           placeholder="Search tags..." value="@ViewBag.SearchTerm" />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-success w-100" onclick="showCreateModal()">
+                    <i class="fas fa-plus"></i> Create
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tags Table -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tag Name</th>
+                        <th>Note</th>
+                        <th>Articles</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var tag in Model)
+                        {
+                            <tr>
+                                <td>@tag.TagID</td>
+                                <td><span class="badge bg-secondary">@tag.TagName</span></td>
+                                <td>@tag.Note</td>
+                                <td><span class="badge bg-info">@tag.ArticleCount</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick="showEditModal(@tag.TagID)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    @if (tag.CanDelete)
+                                    {
+                                        <button class="btn btn-sm btn-danger" onclick="confirmDelete(@tag.TagID, '@tag.TagName')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-secondary" disabled title="Cannot delete tag used in articles">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">No tags found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="tagModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Create Tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="tagForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="tagId" name="TagID" value="0" />
+
+                    <div class="mb-3">
+                        <label for="tagName" class="form-label">Tag Name *</label>
+                        <input type="text" class="form-control" id="tagName" name="TagName" required maxlength="50" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Note</label>
+                        <textarea class="form-control" id="note" name="Note" rows="3" maxlength="400"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var tagModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            tagModal = new bootstrap.Modal(document.getElementById('tagModal'));
+
+            document.getElementById('tagForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveTag();
+            });
+        });
+
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Create Tag';
+            document.getElementById('tagForm').reset();
+            document.getElementById('tagId').value = '0';
+            tagModal.show();
+        }
+
+        function showEditModal(id) {
+            document.getElementById('modalTitle').textContent = 'Edit Tag';
+            document.getElementById('tagId').value = id;
+
+            fetch(`/Tag/Details/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('tagName').value = data.tagName;
+                    document.getElementById('note').value = data.note;
+                    tagModal.show();
+                })
+                .catch(error => {
+                    alert('Error loading tag data');
+                    console.error(error);
+                });
+        }
+
+        function saveTag() {
+            var tagId = document.getElementById('tagId').value;
+            var formData = new FormData(document.getElementById('tagForm'));
+            var url = tagId === '0' ? '/Tag/Create' : '/Tag/Edit';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    tagModal.hide();
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error saving tag');
+                console.error(error);
+            });
+        }
+
+        function confirmDelete(id, name) {
+            if (confirm(`Are you sure you want to delete tag "${name}"?`)) {
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Tag/Delete/${id}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting tag');
+                    console.error(error);
+                });
+            }
+        }
+    </script>
+}
