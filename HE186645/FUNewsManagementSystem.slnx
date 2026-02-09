@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="FUNewsManagement.BusinessLogic/FUNewsManagement.BusinessLogic.csproj" />
+  <Project Path="FUNewsManagement.DataAccess/FUNewsManagement.DataAccess.csproj" />
+  <Project Path="FUNewsManagement.Web/FUNewsManagement.WebApp.csproj" />
+</Solution>

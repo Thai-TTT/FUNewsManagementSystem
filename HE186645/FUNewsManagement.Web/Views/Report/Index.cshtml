@@ -1,0 +1,301 @@
+﻿@model ReportViewModel
+@{
+    ViewData["Title"] = "Reports & Statistics";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #f8f9fa;
+    }
+
+    .reports-container {
+        padding: 60px 0 80px;
+    }
+
+    .page-title {
+        color: white;
+        font-weight: 700;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .filter-card {
+        border: none;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        background: white;
+    }
+
+    .summary-card {
+        border: none;
+        border-radius: 1rem;
+        transition: all 0.3s;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+        .summary-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+    .card-header-gradient {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-bottom: none;
+        color: white;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .table-stats {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+        .table-stats thead th {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .table-stats tbody tr {
+            transition: all 0.3s;
+        }
+
+            .table-stats tbody tr:hover {
+                background: #f8f9fa;
+                transform: scale(1.01);
+            }
+
+    .badge-custom {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+        border-radius: 50px;
+    }
+
+    .btn-generate {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+        transition: all 0.3s;
+    }
+
+        .btn-generate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.4);
+        }
+
+    .no-data-card {
+        background: rgba(255,255,255,0.95);
+        border-radius: 1.25rem;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        color: #495057;
+    }
+</style>
+
+<div class="reports-container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="page-title display-5 fw-bold">
+                <i class="fas fa-chart-bar me-3"></i>Báo cáo & Thống kê
+            </h2>
+            <hr class="w-25 mx-auto border-light opacity-75" />
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="filter-card">
+                <div class="card-body p-4">
+                    <form asp-action="Generate" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-4 align-items-end">
+                            <div class="col-md-4">
+                                <label for="startDate" class="form-label fw-bold">Ngày bắt đầu</label>
+                                <input type="date" class="form-control form-control-lg" id="startDate" name="startDate"
+                                       value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="endDate" class="form-label fw-bold">Ngày kết thúc</label>
+                                <input type="date" class="form-control form-control-lg" id="endDate" name="endDate"
+                                       value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-generate btn-lg w-100">
+                                    <i class="fas fa-chart-line me-2"></i>Tạo báo cáo
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.TotalArticles > 0)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-5 g-4">
+            <div class="col-md-4">
+                <div class="summary-card text-white bg-gradient" style="background: linear-gradient(135deg, #667eea, #5c7cfa);">
+                    <div class="card-body text-center">
+                        <i class="fas fa-newspaper fa-3x mb-3"></i>
+                        <h5 class="card-title">Tổng bài viết</h5>
+                        <h2 class="mb-0">@Model.TotalArticles</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card text-white bg-gradient" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <h5 class="card-title">Bài viết hoạt động</h5>
+                        <h2 class="mb-0">@Model.ActiveArticles</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card text-white bg-gradient" style="background: linear-gradient(135deg, #6c757d, #5a6268);">
+                    <div class="card-body text-center">
+                        <i class="fas fa-times-circle fa-3x mb-3"></i>
+                        <h5 class="card-title">Bài viết không hoạt động</h5>
+                        <h2 class="mb-0">@Model.InactiveArticles</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics by Category -->
+        <div class="card shadow mb-5">
+            <div class="card-header-gradient">
+                <h5 class="mb-0"><i class="fas fa-folder me-2"></i>Thống kê theo Danh mục</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-stats table-hover">
+                        <thead>
+                            <tr>
+                                <th>Danh mục</th>
+                                <th>Tổng số</th>
+                                <th>Hoạt động</th>
+                                <th>Không hoạt động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stat in Model.CategoryStatistics)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@stat.CategoryName</td>
+                                    <td><span class="badge bg-primary badge-custom">@stat.ArticleCount</span></td>
+                                    <td><span class="badge bg-success badge-custom">@stat.ActiveCount</span></td>
+                                    <td><span class="badge bg-secondary badge-custom">@stat.InactiveCount</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics by Author -->
+        <div class="card shadow mb-5">
+            <div class="card-header-gradient">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Thống kê theo Tác giả</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-stats table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tác giả</th>
+                                <th>Tổng số</th>
+                                <th>Hoạt động</th>
+                                <th>Không hoạt động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stat in Model.AuthorStatistics)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@stat.AccountName</td>
+                                    <td><span class="badge bg-primary badge-custom">@stat.ArticleCount</span></td>
+                                    <td><span class="badge bg-success badge-custom">@stat.ActiveCount</span></td>
+                                    <td><span class="badge bg-secondary badge-custom">@stat.InactiveCount</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Articles Detail List -->
+        <div class="card shadow">
+            <div class="card-header-gradient">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Danh sách chi tiết bài viết</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-stats table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tiêu đề</th>
+                                <th>Danh mục</th>
+                                <th>Tạo bởi</th>
+                                <th>Sửa bởi</th>
+                                <th>Ngày tạo</th>
+                                <th>Ngày sửa</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var article in Model.Articles)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@article.NewsArticleID</td>
+                                    <td>@article.NewsTitle</td>
+                                    <td>@article.CategoryName</td>
+                                    <td>@article.CreatedByName</td>
+                                    <td>@(article.UpdatedByName ?? "N/A")</td>
+                                    <td>@article.CreatedDate?.ToString("dd/MM/yyyy")</td>
+                                    <td>@(article.ModifiedDate?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                    <td>
+                                        @if (article.NewsStatus)
+                                        {
+                                            <span class="badge bg-success badge-custom">Hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary badge-custom">Không hoạt động</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.StartDate.HasValue && Model.EndDate.HasValue)
+    {
+        <div class="no-data-card mx-auto col-lg-8">
+            <i class="fas fa-search fa-4x text-primary mb-4"></i>
+            <h4>Không tìm thấy bài viết nào</h4>
+            <p class="text-muted">Không có bài viết nào trong khoảng thời gian bạn chọn.<br />Hãy thử thay đổi ngày bắt đầu/kết thúc.</p>
+        </div>
+    }
+    else
+    {
+        <div class="no-data-card mx-auto col-lg-8">
+            <i class="fas fa-calendar-alt fa-4x text-primary mb-4"></i>
+            <h4>Chưa có dữ liệu báo cáo</h4>
+            <p class="text-muted">Vui lòng chọn khoảng thời gian và nhấn "Tạo báo cáo" để xem thống kê.</p>
+        </div>
+    }
+</div>

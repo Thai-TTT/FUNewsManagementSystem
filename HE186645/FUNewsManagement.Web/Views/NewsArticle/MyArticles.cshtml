@@ -1,0 +1,210 @@
+﻿@model IEnumerable<NewsArticleViewModel>
+@{
+    ViewData["Title"] = "My Articles";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #f8f9fa;
+    }
+
+    .my-articles-container {
+        padding: 60px 0 80px;
+    }
+
+    .page-header {
+        color: white;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .btn-create {
+        background: linear-gradient(90deg, #28a745, #20c997);
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+    }
+
+        .btn-create:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(40,167,69,0.5);
+        }
+
+    .table-my-articles {
+        background: white;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        color: #2c3e50;
+    }
+
+        .table-my-articles thead th {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .table-my-articles tbody tr {
+            transition: all 0.3s ease;
+        }
+
+            .table-my-articles tbody tr:hover {
+                background: #f8f9fa;
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            }
+
+    .badge-status {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+        border-radius: 50px;
+    }
+
+    .btn-action {
+        min-width: 40px;
+        transition: all 0.3s;
+        border: none;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+    .no-articles {
+        background: rgba(255,255,255,0.95);
+        border-radius: 1.25rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        color: #495057;
+    }
+
+        .no-articles i {
+            font-size: 3.5rem;
+            color: #667eea;
+        }
+</style>
+
+<div class="my-articles-container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="page-header display-5 fw-bold">
+                <i class="fas fa-file-alt me-3"></i>Bài viết của tôi
+            </h2>
+            <hr class="w-25 mx-auto border-light opacity-75" />
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12 text-end">
+            <a asp-action="Create" class="btn btn-lg btn-create">
+                <i class="fas fa-plus me-2"></i>Tạo bài viết mới
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-0 border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-my-articles table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tiêu đề</th>
+                            <th>Danh mục</th>
+                            <th>Ngày tạo</th>
+                            <th>Ngày sửa</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var article in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@article.NewsArticleID</td>
+                                    <td>@article.NewsTitle</td>
+                                    <td>@article.CategoryName</td>
+                                    <td>@article.CreatedDate?.ToString("dd/MM/yyyy")</td>
+                                    <td>@(article.ModifiedDate?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                    <td>
+                                        @if (article.NewsStatus)
+                                        {
+                                            <span class="badge bg-success badge-status">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary badge-status">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Edit" asp-route-id="@article.NewsArticleID"
+                                               class="btn btn-warning btn-action" title="Sửa bài viết">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-danger btn-action"
+                                                    onclick="confirmDelete('@article.NewsArticleID', '@article.NewsTitle')"
+                                                    title="Xóa bài viết">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="no-articles mx-auto col-lg-8">
+                                        <i class="fas fa-folder-open mb-3"></i>
+                                        <h4>Bạn chưa có bài viết nào</h4>
+                                        <p class="text-muted mb-4">Hãy bắt đầu bằng cách tạo bài viết mới ngay bây giờ!</p>
+                                        <a asp-action="Create" class="btn btn-success">
+                                            <i class="fas fa-plus me-2"></i>Tạo bài viết đầu tiên
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, title) {
+            if (confirm(`Bạn chắc chắn muốn xóa bài viết "${title}"?`)) {
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/NewsArticle/Delete/${id}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra');
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi khi xóa bài viết');
+                    console.error(error);
+                });
+            }
+        }
+    </script>
+}

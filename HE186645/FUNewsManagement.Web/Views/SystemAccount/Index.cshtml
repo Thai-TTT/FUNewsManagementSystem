@@ -1,0 +1,409 @@
+﻿@model IEnumerable<SystemAccountViewModel>
+@{
+    ViewData["Title"] = "Account Management";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #f8f9fa;
+    }
+
+    .accounts-container {
+        padding: 60px 0 80px;
+    }
+
+    .page-title {
+        color: white;
+        font-weight: 700;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .filter-form {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .form-control, .form-select {
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 0.75rem;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-search {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+        transition: all 0.3s;
+    }
+
+    .btn-create {
+        background: linear-gradient(90deg, #28a745, #20c997);
+        border: none;
+        transition: all 0.3s;
+    }
+
+        .btn-search:hover, .btn-create:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+
+    .table-accounts {
+        background: white;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        color: #2c3e50;
+    }
+
+        .table-accounts thead th {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .table-accounts tbody tr {
+            transition: all 0.3s;
+        }
+
+            .table-accounts tbody tr:hover {
+                background: #f1f3f5;
+                transform: scale(1.01);
+            }
+
+    .badge-role {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+        border-radius: 50px;
+    }
+
+    .btn-action {
+        min-width: 38px;
+        transition: all 0.3s;
+        border: none;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+    .no-accounts {
+        background: rgba(255,255,255,0.95);
+        border-radius: 1.25rem;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        color: #495057;
+    }
+
+    /* Modal Glassmorphism */
+    .modal-content {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        color: #2c3e50;
+    }
+
+    .modal-header {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        color: white;
+        border-top-left-radius: 1.25rem;
+        border-top-right-radius: 1.25rem;
+        border-bottom: none;
+    }
+
+    .modal-footer .btn-primary {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+    }
+
+        .modal-footer .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
+
+    .password-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="accounts-container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="page-title display-5 fw-bold">
+                <i class="fas fa-users me-3"></i>Quản lý Tài khoản
+            </h2>
+            <hr class="w-25 mx-auto border-light opacity-75" />
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-11">
+            <form method="get" asp-action="Index" class="filter-form row g-3 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-0"><i class="fas fa-search text-primary"></i></span>
+                        <input type="text" name="searchTerm" class="form-control border-0 shadow-none"
+                               placeholder="Tìm theo tên hoặc email..." value="@ViewBag.SearchTerm" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="role" class="form-select form-select-lg">
+                        <option value="">Tất cả vai trò</option>
+                        <option value="1" selected="@(ViewBag.SelectedRole == 1 ? "selected" : null)">Staff</option>
+                        <option value="2" selected="@(ViewBag.SelectedRole == 2 ? "selected" : null)">Lecturer</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-search btn-lg w-100">
+                        <i class="fas fa-search me-2"></i>Tìm kiếm
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-create btn-lg w-100" onclick="showCreateModal()">
+                        <i class="fas fa-plus me-2"></i>Tạo tài khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="table-responsive">
+        <table class="table table-accounts table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var account in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">@account.AccountID</td>
+                            <td>@account.AccountName</td>
+                            <td>@account.AccountEmail</td>
+                            <td>
+                                @if (account.AccountRole == 1)
+                                {
+                                    <span class="badge bg-primary badge-role">Staff</span>
+                                }
+                                else if (account.AccountRole == 2)
+                                {
+                                    <span class="badge bg-info badge-role">Lecturer</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning btn-action" onclick="showEditModal(@account.AccountID)" title="Sửa tài khoản">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    @if (account.CanDelete)
+                                    {
+                                        <button class="btn btn-danger btn-action" onclick="confirmDelete(@account.AccountID, '@account.AccountName')" title="Xóa tài khoản">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary btn-action" disabled title="Không thể xóa vì tài khoản có bài viết liên quan">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5">
+                            <div class="no-accounts mx-auto col-lg-8">
+                                <i class="fas fa-users-slash fa-4x text-primary mb-3"></i>
+                                <h4>Chưa có tài khoản nào</h4>
+                                <p class="text-muted">Hãy tạo tài khoản mới để bắt đầu quản lý.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create/Edit Modal (Glassmorphism) -->
+<div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Tạo Tài khoản Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="accountForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="accountId" name="AccountID" value="0" />
+                    <div class="mb-4">
+                        <label for="accountName" class="form-label fw-bold">Tên tài khoản *</label>
+                        <input type="text" class="form-control form-control-lg" id="accountName" name="AccountName" required />
+                    </div>
+                    <div class="mb-4">
+                        <label for="accountEmail" class="form-label fw-bold">Email *</label>
+                        <input type="email" class="form-control form-control-lg" id="accountEmail" name="AccountEmail" required />
+                    </div>
+                    <div class="mb-4">
+                        <label for="accountRole" class="form-label fw-bold">Vai trò *</label>
+                        <select class="form-select form-select-lg" id="accountRole" name="AccountRole" required>
+                            <option value="">Chọn vai trò</option>
+                            <option value="1">Staff</option>
+                            <option value="2">Lecturer</option>
+                        </select>
+                    </div>
+                    <div class="mb-4" id="passwordGroup">
+                        <label for="accountPassword" class="form-label fw-bold">Mật khẩu *</label>
+                        <input type="password" class="form-control form-control-lg" id="accountPassword" name="AccountPassword" minlength="6" />
+                        <small class="password-info mt-1 d-block">Tối thiểu 6 ký tự. Để trống khi chỉnh sửa để giữ mật khẩu hiện tại.</small>
+                    </div>
+                    <div class="mb-4" id="confirmPasswordGroup">
+                        <label for="confirmPassword" class="form-label fw-bold">Xác nhận mật khẩu *</label>
+                        <input type="password" class="form-control form-control-lg" id="confirmPassword" name="ConfirmPassword" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-lg btn-primary">
+                        <i class="fas fa-save me-2"></i>Lưu tài khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var accountModal;
+        document.addEventListener('DOMContentLoaded', function() {
+            accountModal = new bootstrap.Modal(document.getElementById('accountModal'));
+            document.getElementById('accountForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveAccount();
+            });
+        });
+
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Tạo Tài khoản Mới';
+            document.getElementById('accountForm').reset();
+            document.getElementById('accountId').value = '0';
+            document.getElementById('accountPassword').required = true;
+            document.getElementById('confirmPassword').required = true;
+            accountModal.show();
+        }
+
+        function showEditModal(id) {
+            document.getElementById('modalTitle').textContent = 'Chỉnh sửa Tài khoản';
+            document.getElementById('accountId').value = id;
+            document.getElementById('accountPassword').required = false;
+            document.getElementById('confirmPassword').required = false;
+            fetch(`/SystemAccount/Details/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('accountName').value = data.accountName;
+                    document.getElementById('accountEmail').value = data.accountEmail;
+                    document.getElementById('accountRole').value = data.accountRole;
+                    document.getElementById('accountPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    accountModal.show();
+                })
+                .catch(error => {
+                    alert('Lỗi khi tải dữ liệu tài khoản');
+                    console.error(error);
+                });
+        }
+
+        function saveAccount() {
+            var accountId = document.getElementById('accountId').value;
+            var name = document.getElementById('accountName').value.trim();
+            var email = document.getElementById('accountEmail').value.trim();
+            var role = document.getElementById('accountRole').value;
+            var password = document.getElementById('accountPassword').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!name) { alert('Tên tài khoản là bắt buộc'); return; }
+            if (!email) { alert('Email là bắt buộc'); return; }
+            if (!role) { alert('Vai trò là bắt buộc'); return; }
+
+            if (accountId === '0') {
+                if (!password || password.length < 6) { alert('Mật khẩu phải ít nhất 6 ký tự'); return; }
+                if (password !== confirmPassword) { alert('Mật khẩu xác nhận không khớp'); return; }
+            } else if (password) {
+                if (password.length < 6) { alert('Mật khẩu phải ít nhất 6 ký tự'); return; }
+                if (password !== confirmPassword) { alert('Mật khẩu xác nhận không khớp'); return; }
+            }
+
+            var formData = new FormData(document.getElementById('accountForm'));
+            var url = accountId === '0' ? '/SystemAccount/Create' : '/SystemAccount/Edit';
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    accountModal.hide();
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                alert('Lỗi khi lưu tài khoản: ' + error);
+                console.error(error);
+            });
+        }
+
+        function confirmDelete(id, name) {
+            if (confirm(`Bạn chắc chắn muốn xóa tài khoản "${name}"?`)) {
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+                fetch(`/SystemAccount/Delete/${id}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi khi xóa tài khoản');
+                    console.error(error);
+                });
+            }
+        }
+    </script>
+}

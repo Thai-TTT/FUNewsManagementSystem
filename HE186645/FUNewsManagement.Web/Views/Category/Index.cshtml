@@ -1,0 +1,424 @@
+﻿@model IEnumerable<CategoryViewModel>
+@{
+    ViewData["Title"] = "Category Management";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #f8f9fa;
+    }
+
+    .category-container {
+        padding: 60px 0 80px;
+    }
+
+    .page-title {
+        color: white;
+        font-weight: 700;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .search-form {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .form-control, .form-select {
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 0.75rem;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-search {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+        transition: all 0.3s;
+    }
+
+    .btn-create {
+        background: linear-gradient(90deg, #28a745, #20c997);
+        border: none;
+        transition: all 0.3s;
+    }
+
+        .btn-search:hover, .btn-create:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+
+    .table-category {
+        background: white;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        color: #2c3e50;
+    }
+
+        .table-category thead th {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .table-category tbody tr {
+            transition: all 0.3s;
+        }
+
+            .table-category tbody tr:hover {
+                background: #f1f3f5;
+                transform: scale(1.01);
+            }
+
+    .badge-status {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+        border-radius: 50px;
+    }
+
+    .btn-action {
+        min-width: 38px;
+        transition: all 0.3s;
+        border: none;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+    .no-data {
+        background: rgba(255,255,255,0.9);
+        border-radius: 1rem;
+        padding: 3rem;
+        text-align: center;
+        color: #495057;
+    }
+
+    /* Modal Glassmorphism */
+    .modal-content {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        color: #2c3e50;
+    }
+
+    .modal-header {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        color: white;
+        border-top-left-radius: 1.25rem;
+        border-top-right-radius: 1.25rem;
+        border-bottom: none;
+    }
+
+    .modal-footer .btn-primary {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+    }
+
+        .modal-footer .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
+</style>
+
+<div class="category-container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="page-title display-5 fw-bold">
+                <i class="fas fa-folder me-3"></i>Quản lý Danh mục
+            </h2>
+            <hr class="w-25 mx-auto border-light opacity-75" />
+        </div>
+    </div>
+
+    <!-- Search & Create Form -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <form method="get" asp-action="Index" class="search-form row g-3 align-items-center">
+                <div class="col-md-7">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-0"><i class="fas fa-search text-primary"></i></span>
+                        <input type="text" name="searchTerm" class="form-control border-0 shadow-none"
+                               placeholder="Tìm kiếm danh mục..." value="@ViewBag.SearchTerm" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-search btn-lg w-100">
+                        <i class="fas fa-search me-2"></i>Tìm kiếm
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-create btn-lg w-100" onclick="showCreateModal()">
+                        <i class="fas fa-plus me-2"></i>Tạo danh mục mới
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="table-responsive">
+        <table class="table table-category table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Mô tả</th>
+                    <th>Danh mục cha</th>
+                    <th>Số bài viết</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var category in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">@category.CategoryID</td>
+                            <td>@category.CategoryName</td>
+                            <td>@category.CategoryDesciption</td>
+                            <td>@(category.ParentCategoryName ?? "Không có")</td>
+                            <td>
+                                <span class="badge bg-info badge-status">@category.ArticleCount</span>
+                            </td>
+                            <td>
+                                @if (category.IsActive)
+                                {
+                                    <span class="badge bg-success badge-status">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary badge-status">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-info btn-action" onclick="toggleActive(@category.CategoryID)"
+                                            title="Bật/Tắt trạng thái">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                    <button class="btn btn-warning btn-action" onclick="showEditModal(@category.CategoryID)"
+                                            title="Sửa danh mục">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    @if (category.CanDelete)
+                                    {
+                                        <button class="btn btn-danger btn-action" onclick="confirmDelete(@category.CategoryID, '@category.CategoryName')"
+                                                title="Xóa danh mục">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary btn-action" disabled title="Không thể xóa vì có bài viết liên quan">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="no-data mx-auto col-lg-8">
+                                <i class="fas fa-folder-open fa-3x text-primary mb-3"></i>
+                                <h4>Chưa có danh mục nào</h4>
+                                <p class="text-muted">Hãy tạo danh mục mới để bắt đầu quản lý bài viết!</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Create/Edit (Glassmorphism) -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Tạo Danh mục Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="categoryForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="categoryId" name="CategoryID" value="0" />
+                    <div class="mb-4">
+                        <label for="categoryName" class="form-label fw-bold">Tên danh mục *</label>
+                        <input type="text" class="form-control form-control-lg" id="categoryName" name="CategoryName" required maxlength="100" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="categoryDescription" class="form-label fw-bold">Mô tả *</label>
+                        <textarea class="form-control" id="categoryDescription" name="CategoryDesciption" rows="4" required maxlength="250"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="parentCategoryId" class="form-label fw-bold">Danh mục cha</label>
+                        <select class="form-select form-select-lg" id="parentCategoryId" name="ParentCategoryID">
+                            <option value="">Không có (danh mục gốc)</option>
+                        </select>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input type="checkbox" class="form-check-input" id="isActive" name="IsActive" checked style="width: 3rem; height: 1.6rem;" />
+                        <label class="form-check-label fs-5" for="isActive">Danh mục đang hoạt động</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-lg btn-primary">
+                        <i class="fas fa-save me-2"></i>Lưu danh mục
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Giữ nguyên toàn bộ script của bạn (không thay đổi logic)
+        var categoryModal;
+        document.addEventListener('DOMContentLoaded', function() {
+            categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            document.getElementById('categoryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCategory();
+            });
+            loadParentCategories();
+        });
+
+        function loadParentCategories() {
+            fetch('/Category/GetParentCategories')
+                .then(response => response.json())
+                .then(data => {
+                    var select = document.getElementById('parentCategoryId');
+                    select.innerHTML = '<option value="">Không có (danh mục gốc)</option>';
+                    data.forEach(category => {
+                        var option = document.createElement('option');
+                        option.value = category.categoryID;
+                        option.textContent = category.categoryName;
+                        select.appendChild(option);
+                    });
+                });
+        }
+
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Tạo Danh mục Mới';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '0';
+            document.getElementById('isActive').checked = true;
+            loadParentCategories();
+            categoryModal.show();
+        }
+
+        function showEditModal(id) {
+            document.getElementById('modalTitle').textContent = 'Chỉnh sửa Danh mục';
+            document.getElementById('categoryId').value = id;
+            fetch(`/Category/Details/${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    var data = result.category;
+                    document.getElementById('categoryName').value = data.categoryName;
+                    document.getElementById('categoryDescription').value = data.categoryDesciption;
+                    document.getElementById('isActive').checked = data.isActive;
+                    loadParentCategories();
+                    setTimeout(() => {
+                        document.getElementById('parentCategoryId').value = data.parentCategoryID || '';
+                    }, 100);
+                    categoryModal.show();
+                })
+                .catch(error => {
+                    alert('Lỗi khi tải dữ liệu danh mục');
+                    console.error(error);
+                });
+        }
+
+        function saveCategory() {
+            var categoryId = document.getElementById('categoryId').value;
+            var formData = new FormData(document.getElementById('categoryForm'));
+            var url = categoryId === '0' ? '/Category/Create' : '/Category/Edit';
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    categoryModal.hide();
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                alert('Lỗi khi lưu danh mục');
+                console.error(error);
+            });
+        }
+
+        function toggleActive(id) {
+            if (confirm('Bạn chắc chắn muốn bật/tắt trạng thái danh mục này?')) {
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+                fetch(`/Category/ToggleActive/${id}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi khi thay đổi trạng thái');
+                    console.error(error);
+                });
+            }
+        }
+
+        function confirmDelete(id, name) {
+            if (confirm(`Bạn chắc chắn muốn xóa danh mục "${name}"?`)) {
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+                fetch(`/Category/Delete/${id}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi khi xóa danh mục');
+                    console.error(error);
+                });
+            }
+        }
+    </script>
+}

@@ -1,0 +1,200 @@
+﻿@model IEnumerable<NewsArticleViewModel>
+@{
+    ViewData["Title"] = "Home - News Articles";
+}
+
+<style>
+    /* Gradient background giống login */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+    }
+
+    .news-container {
+        padding: 60px 0;
+    }
+
+    .card-news {
+        border: none;
+        border-radius: 1.25rem; /* rounded hơn */
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        background: white;
+    }
+
+        .card-news:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+        }
+
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .card-news:hover .card-img-top {
+        transform: scale(1.08);
+    }
+
+    .card-body {
+        padding: 1.75rem;
+    }
+
+    .card-title {
+        font-weight: 700;
+        font-size: 1.4rem;
+        line-height: 1.3;
+        margin-bottom: 0.75rem;
+        color: #2c3e50;
+    }
+
+        .card-title a {
+            color: inherit;
+            transition: color 0.3s;
+        }
+
+            .card-title a:hover {
+                color: #667eea;
+            }
+
+    .card-subtitle {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    .card-text {
+        font-size: 0.95rem;
+        color: #495057;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3; /* Giới hạn 3 dòng */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .card-footer {
+        background: transparent;
+        border-top: 1px solid #e9ecef;
+        padding: 1rem 1.75rem;
+    }
+
+    .btn-read-more {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+        transition: all 0.3s;
+    }
+
+        .btn-read-more:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+    .meta-icon {
+        color: #6c757d;
+        margin-right: 0.4rem;
+    }
+
+    .no-articles {
+        background: rgba(255,255,255,0.9);
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+    }
+</style>
+
+<div class="news-container">
+    <div class="row mb-5">
+        <div class="col-12 text-center text-white">
+            <h2 class="fw-bold display-5">
+                <i class="fas fa-newspaper me-3"></i>Latest News Articles
+            </h2>
+            <p class="lead text-white-75">Khám phá những tin tức mới nhất từ FUNews</p>
+            <hr class="w-25 mx-auto border-light opacity-75" />
+        </div>
+    </div>
+
+    <!-- Search and Filter - giữ nguyên nhưng thêm style đẹp hơn -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <form method="get" asp-action="Index" class="row g-3 bg-white bg-opacity-25 backdrop-blur p-4 rounded-4 shadow">
+                <div class="col-md-5">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-0"><i class="fas fa-search text-primary"></i></span>
+                        <input type="text" name="searchTerm" class="form-control border-0 shadow-none"
+                               placeholder="Tìm kiếm bài viết..." value="@ViewBag.SearchTerm" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="categoryId" class="form-select form-select-lg border-0 shadow-none">
+                        <option value="">Tất cả danh mục</option>
+                        @foreach (var category in ViewBag.Categories)
+                        {
+                            <option value="@category.CategoryID"
+                                    selected="@(ViewBag.SelectedCategory == category.CategoryID ? "selected" : null)">
+                                @category.CategoryName
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-search me-2"></i>Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Articles Grid -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var article in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card-news h-100">
+                        }
+
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a asp-action="ViewArticle" asp-route-id="@article.NewsArticleID">
+                                    @article.NewsTitle
+                                </a>
+                            </h5>
+                            <h6 class="card-subtitle">@article.Headline</h6>
+                            <p class="card-text mt-3">@article.NewsContent</p>
+                        </div>
+
+                        <div class="card-footer">
+                            <small class="text-muted d-block mb-2">
+                                <i class="fas fa-folder meta-icon"></i> @article.CategoryName
+                            </small>
+                            <small class="text-muted d-block mb-2">
+                                <i class="fas fa-user meta-icon"></i> @article.CreatedByName
+                            </small>
+                            <small class="text-muted d-block mb-3">
+                                <i class="fas fa-calendar meta-icon"></i> @article.CreatedDate?.ToString("MMM dd, yyyy")
+                            </small>
+                            <a asp-action="ViewArticle" asp-route-id="@article.NewsArticleID"
+                               class="btn btn-read-more btn-sm text-white">
+                                <i class="fas fa-eye me-2"></i>Đọc thêm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-articles mx-auto col-lg-8">
+            <i class="fas fa-info-circle fa-3x text-primary mb-3"></i>
+            <h4>Không tìm thấy bài viết nào</h4>
+            <p class="text-muted">Hãy thử thay đổi từ khóa hoặc danh mục tìm kiếm nhé!</p>
+        </div>
+    }
+</div>

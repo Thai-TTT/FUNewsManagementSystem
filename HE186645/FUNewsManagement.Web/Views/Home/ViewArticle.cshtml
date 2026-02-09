@@ -1,0 +1,207 @@
+﻿@model NewsArticleViewModel
+@{
+    ViewData["Title"] = Model.NewsTitle;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #f8f9fa;
+    }
+
+    .article-container {
+        padding: 80px 0 60px;
+    }
+
+    .main-article-card {
+        border: none;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        background: white;
+        color: #2c3e50;
+    }
+
+    .article-hero {
+        height: 400px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+        .article-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+        }
+
+    .article-title {
+        font-weight: 800;
+        font-size: 2.8rem;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        color: #1a1f36;
+    }
+
+    .article-headline {
+        font-size: 1.4rem;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 1.5rem;
+    }
+
+    .article-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #34495e;
+    }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+        }
+
+    .meta-badge {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+        border-radius: 2rem;
+    }
+
+    .back-btn {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        transition: all 0.3s;
+    }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+    .related-card {
+        border: none;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        background: white;
+    }
+
+    .related-header {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        color: white;
+        padding: 1.25rem;
+    }
+
+    .list-group-item {
+        transition: all 0.3s;
+        border: none;
+        padding: 1.25rem;
+    }
+
+        .list-group-item:hover {
+            background: #f8f9fa;
+            transform: translateX(8px);
+        }
+
+        .list-group-item h6 {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+    .no-related {
+        background: rgba(255,255,255,0.9);
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+    }
+</style>
+
+<div class="article-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Main Article -->
+            <article class="main-article-card mb-5">
+          
+                <div class="card-body p-5">
+                    <h1 class="article-title">@Model.NewsTitle</h1>
+                    <h4 class="article-headline">@Model.Headline</h4>
+
+                    <div class="mb-4">
+                        <span class="badge bg-primary meta-badge me-2">
+                            <i class="fas fa-folder me-1"></i> @Model.CategoryName
+                        </span>
+                        @foreach (var tag in Model.AssignedTags)
+                        {
+                            <span class="badge bg-gradient text-white meta-badge me-2"
+                                  style="background: linear-gradient(90deg, #667eea, #764ba2);">
+                                <i class="fas fa-tag me-1"></i> @tag.TagName
+                            </span>
+                        }
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="article-content">
+                        @Html.Raw(Model.NewsContent?.Replace("\n", "<br />"))
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.NewsSource))
+                    {
+                        <div class="alert alert-light mt-4">
+                            <strong>Nguồn:</strong> <a href="@Model.NewsSource" target="_blank" class="text-primary">@Model.NewsSource</a>
+                        </div>
+                    }
+
+                    <hr class="my-4" />
+
+                    <div class="text-muted small">
+                        <i class="fas fa-user me-2"></i> Written by: <strong>@Model.CreatedByName</strong>
+                        <br />
+                        <i class="fas fa-calendar me-2"></i> Published: <strong>@Model.CreatedDate?.ToString("MMMM dd, yyyy")</strong>
+                        
+                    </div>
+                </div>
+            </article>
+
+            <!-- Back Button -->
+            <a asp-action="Index" class="btn btn-lg back-btn">
+                <i class="fas fa-arrow-left me-2"></i> Quay lại danh sách bài viết
+            </a>
+        </div>
+
+        <!-- Sidebar Related Articles -->
+        <div class="col-lg-4">
+            @if (ViewBag.RelatedArticles != null && ((List<NewsArticleViewModel>)ViewBag.RelatedArticles).Any())
+            {
+                <div class="related-card">
+                    <div class="related-header">
+                        <h5 class="mb-0"><i class="fas fa-newspaper me-2"></i>Bài viết liên quan</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var related in (List<NewsArticleViewModel>)ViewBag.RelatedArticles)
+                        {
+                            <a asp-action="ViewArticle" asp-route-id="@related.NewsArticleID"
+                               class="list-group-item list-group-item-action">
+                                <h6 class="mb-2">@related.NewsTitle</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-folder me-1"></i> @related.CategoryName
+                                    <br />
+                                    <i class="fas fa-calendar me-1"></i> @related.CreatedDate?.ToString("MMM dd, yyyy")
+                                </small>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="no-related">
+                    <i class="fas fa-info-circle fa-2x text-primary mb-3"></i>
+                    <h5>Chưa có bài viết liên quan</h5>
+                </div>
+            }
+        </div>
+    </div>
+</div>
